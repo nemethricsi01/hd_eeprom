@@ -1,0 +1,9 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.portWin": "COM3",
+  "files.associations": {
+    "sdkconfig.h": "c",
+    "gpio_ll.h": "c"
+  },
+  "idf.adapterTargetName": "esp32"
+}

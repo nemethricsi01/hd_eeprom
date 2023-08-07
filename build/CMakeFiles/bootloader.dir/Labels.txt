@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+E:/NARVAL/esp32_projektek/hd_eeprom/build/CMakeFiles/bootloader
+E:/NARVAL/esp32_projektek/hd_eeprom/build/CMakeFiles/bootloader.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/CMakeFiles/bootloader-complete.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+E:/NARVAL/esp32_projektek/hd_eeprom/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
