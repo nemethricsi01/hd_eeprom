@@ -3,7 +3,8 @@
   "idf.portWin": "COM3",
   "files.associations": {
     "sdkconfig.h": "c",
-    "gpio_ll.h": "c"
+    "gpio_ll.h": "c",
+    "soc_caps.h": "c"
   },
   "idf.adapterTargetName": "esp32"
 }

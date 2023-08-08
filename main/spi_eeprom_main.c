@@ -31,49 +31,56 @@
 spi_device_handle_t spi2;
 esp_err_t ret;
 // static const char TAG[] = "main";
-const uint8_t transmitdata[3] = {0xaa,0xbb,0xcc};
+const uint8_t transmitdata[16] = {0xff,0,0,0,0,0,0,0,
+                                    0,0,0,0,0,0,0,0};
+const uint8_t transmitdata2[16] = {0xff,0,0,0,0,0,0,0,
+                                    0,0,0,0,0,0,0,0};
 uint8_t spiTx(const uint8_t *txData, uint16_t length);
 typedef struct 
 {
-    uint8_t feth;
-    uint8_t fetl;
+    volatile uint8_t feth;
+    volatile uint8_t fetl;
 }fet_state_t;
 
 fet_state_t fetek = {
     .feth = 1,
     .fetl = 0
 };
+uint8_t bufferOut = 0;
+ledc_timer_config_t ledtimerconf = {
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .timer_num = LEDC_TIMER_3,
+        .freq_hz = 60000,
+        .clk_cfg = LEDC_AUTO_CLK
+    };
+
+ledc_channel_config_t ledchanconf = {
+        .gpio_num =         26,
+        .speed_mode =       LEDC_HIGH_SPEED_MODE,
+        .channel =          LEDC_CHANNEL_0,
+        .intr_type =        LEDC_INTR_DISABLE,
+        .timer_sel =        LEDC_TIMER_3,
+        .duty =             250,
+        .hpoint =           0,
+        .flags.output_invert = 1
+    };
+
 
 static bool IRAM_ATTR timer_group_isr_callback(void * args) {
     gpio_set_level(LED_PIN, !gpio_get_level(LED_PIN));
-    if(fetek.feth == 1)
+    
+    if(bufferOut == 0)
     {
-        fetek.feth = 0;
+        spiTx(transmitdata,16);
     }
     else
     {
-        fetek.feth = 1;
-    }
-    if(fetek.fetl == 1)
-    {
-        fetek.fetl = 0;
-    }
-    else
-    {
-        fetek.fetl = 1;
-    }
-    if(fetek.feth == 1)
-    {
-        spiTx(transmitdata,3);
-    }
-    if(fetek.fetl == 1)
-    {
-        spiTx(transmitdata,3);
+        spiTx(transmitdata2,16);
     }
         
 
-    gpio_set_level(PIN_NUM_FETH,fetek.feth);
-    gpio_set_level(PIN_NUM_FETL,fetek.fetl);
+    
     return 0;
 }
 static void spiSelect(spi_transaction_t* t)
@@ -83,12 +90,36 @@ static void spiSelect(spi_transaction_t* t)
 }     
 
 static void spiDeselect(spi_transaction_t* t)
-{
-   
-   gpio_set_level(PIN_NUM_LATCH,0);
-   gpio_set_level(PIN_NUM_LATCH,1);
-   gpio_set_level(PIN_NUM_LATCH,0);
-   gpio_set_level(PIN_NUM_CS,1);
+{  
+   ledc_stop(LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0,0);
+   if(fetek.feth == 1)
+    {
+        fetek.feth = 0;
+        bufferOut = 0;
+    }
+    else
+    {
+        fetek.feth = 1;
+        bufferOut = 1;
+    }
+    if(fetek.fetl == 1)
+    {
+        fetek.fetl = 0;
+    }
+    else
+    {
+        fetek.fetl = 1;
+    }
+    gpio_set_level(PIN_NUM_FETH,fetek.feth);
+    gpio_set_level(PIN_NUM_FETL,fetek.fetl);
+    gpio_set_level(PIN_NUM_LATCH,0);
+    gpio_set_level(PIN_NUM_LATCH,0);
+    gpio_set_level(PIN_NUM_LATCH,1);
+    gpio_set_level(PIN_NUM_LATCH,1);
+    gpio_set_level(PIN_NUM_LATCH,1);
+    gpio_set_level(PIN_NUM_LATCH,0);
+    ledc_update_duty(LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0);
+
 }
 void spiInitR()
 {
@@ -104,8 +135,8 @@ void spiInitR()
     ret = spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
     ESP_ERROR_CHECK(ret);
     spi_device_interface_config_t devcfg={
-        .clock_speed_hz = 1000000,  // 1 MHz
-        .mode = 1,                  //SPI mode 0
+        .clock_speed_hz = 2000000,  // 1 MHz
+        .mode = 0,                  //SPI mode 0
         .spics_io_num = -1,     
         .queue_size = 128,
 		.flags = SPI_DEVICE_HALFDUPLEX,
@@ -149,27 +180,13 @@ void app_main(void)
     };
     timer_init(TIMER_GROUP_0, TIMER_0, &config);
     timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, (5000));
+    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, (80000));
     timer_enable_intr(TIMER_GROUP_0, TIMER_0);
     timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, timer_group_isr_callback, NULL, 0);
     timer_start(TIMER_GROUP_0, TIMER_0);
-    ledc_timer_config_t ledtimerconf = {
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .duty_resolution = LEDC_TIMER_16_BIT,
-        .timer_num = LEDC_TIMER_3,
-        .freq_hz = 1000,
-        .clk_cfg = LEDC_AUTO_CLK
-    };
+    
     ledc_timer_config(&ledtimerconf);
-    ledc_channel_config_t ledchanconf = {
-        .gpio_num =         26,
-        .speed_mode =       LEDC_LOW_SPEED_MODE,
-        .channel =          LEDC_CHANNEL_0,
-        .intr_type =        LEDC_INTR_DISABLE,
-        .timer_sel =        LEDC_TIMER_3,
-        .duty =             4096,
-        .hpoint =           0
-    };
+    
     ledc_channel_config(&ledchanconf);  
     
     
